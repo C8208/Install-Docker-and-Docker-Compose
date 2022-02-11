@@ -22,8 +22,26 @@ newgrp docker
 sudo curl -L "https://github.com/docker/compose/releases/download/1.27.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
 sudo chmod +x /usr/local/bin/docker-compose 
 
-#  Verify
+# install jenkins
+FROM jenkins/jenkins:2.319
+USER root
+RUN apt-get update && \
+apt-get -y install apt-transport-https \
+    ca-certificates \
+    curl \
+    wget \
+    gnupg2 \
+    software-properties-common && \
+curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
+add-apt-repository \
+    "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
+    $(lsb_release -cs) \
+    stable" && \
+apt-get update && \
+apt-get -y install docker-ce
+RUN usermod -a -G docker jenkins
 
+# Finspire Jenkins Dashboard
 version: '3.7'
 services:
   jenkins:
@@ -130,20 +148,4 @@ networks:
   finspire:
     name: finspire
     driver: bridge
-FROM jenkins/jenkins:2.319
-USER root
-RUN apt-get update && \
-apt-get -y install apt-transport-https \
-    ca-certificates \
-    curl \
-    wget \
-    gnupg2 \
-    software-properties-common && \
-curl -fsSL https://download.docker.com/linux/$(. /etc/os-release; echo "$ID")/gpg > /tmp/dkey; apt-key add /tmp/dkey && \
-add-apt-repository \
-    "deb [arch=amd64] https://download.docker.com/linux/$(. /etc/os-release; echo "$ID") \
-    $(lsb_release -cs) \
-    stable" && \
-apt-get update && \
-apt-get -y install docker-ce
-RUN usermod -a -G docker jenkins
+
